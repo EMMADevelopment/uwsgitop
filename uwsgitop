@@ -28,6 +28,18 @@ def human_size(n):
         return "%.1fK" % (n/1024)
     return "%d" % n
 
+def reduce_size(n):
+    # KM miles de millones
+    if n >= (1000*1000*1000):
+        return "%.1fKM" % (n/(1000*1000))
+    # M millones
+    if n >= (1000*1000):
+        return "%.1fM" % (n/(1000*1000))
+    # K miles
+    if n >= 1000:
+        return "%.1fK" % (n/1000)
+    return "%d" % n
+    
 def inet_addr(arg):
     sfamily = socket.AF_INET
     host, port = arg.rsplit(':', 1)
@@ -261,11 +273,7 @@ def main():
                 wtx = human_size(worker['tx'])
                 wlastspawn = "--:--:--"
 
-                wrunt = worker['running_time']/1000
-                if wrunt > 9999999:
-                    wrunt = "%sm" % str(wrunt / (1000*60))
-                else:
-                    wrunt = str(wrunt)
+                wrunt = (worker['running_time']/1000)/60/60                
 
                 if worker['last_spawn']:
                     wlastspawn = time.strftime("%H:%M:%S", time.localtime(worker['last_spawn']))
@@ -287,10 +295,23 @@ def main():
                 rps = int(round(rps_per_worker[wid]))
 
                 try:
-                    screen.addstr(pos, 0, " %s\t%.1f\t%d\t%d\t%d\t%d\t%d\t%s\t%dms\t%s\t%s\t%s\t%s\t%s\t%s\t%s" % (
-                        wid, calc_percent(tot, worker['requests']),  worker['pid'], worker['requests'], rps, worker['exceptions'], sigs, worker['status'],
-                        worker['avg_rt']/1000, human_size(worker['rss']), human_size(worker['vsz']),
-                        wtx, worker['respawn_count'], worker['harakiri_count'], wrunt, wlastspawn
+                    screen.addstr(pos, 0, " %s\t%.1f\t%s\t%s\t%s\t%s\t%s\t%s\t%sms\t%s\t%s\t%s\t%s\t%s\t%sH\t%s" % (
+                        wid, 
+                        calc_percent(tot, worker['requests']),
+                        worker['pid'],
+                        reduce_size(worker['requests']),
+                        reduce_size(rps),
+                        reduce_size(worker['exceptions']),
+                        reduce_size(sigs),
+                        worker['status'],
+                        int(worker['avg_rt']/1000), 
+                        human_size(worker['rss']), 
+                        human_size(worker['vsz']),
+                        wtx, 
+                        worker['respawn_count'], 
+                        worker['harakiri_count'], 
+                        reduce_size(wrunt), 
+                        wlastspawn
                     ), color)
                 except:
                     pass
